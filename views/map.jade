@@ -1,0 +1,605 @@
+extends layout
+
+block content
+    .container-fluid
+        .row.content
+            .col-sm-3.sidenav
+                h3= title
+                .control-group
+                    #checkbox
+                        label Nature Filters
+                        .row
+                        label.checkbox-inline
+                            input#water(type='checkbox', autocomplete='off')
+                            |  Water
+                        label.checkbox-inline
+                            input#green(type='checkbox', autocomplete='off')
+                            |  Green
+                br
+                label Find restaurants near a point on map
+                .input-group
+                    input.form-control#byPointInput(type='text', placeholder='Choose position on the map', disabled='true')
+                    span.input-group-btn
+                        button.btn.btn-default#byPointButton(type='button')
+                            span.glyphicon.glyphicon-search
+                br
+                label Find restaurants near a city
+                .input-group
+                    input.form-control#byCityInput(type='text', placeholder='Enter request params')
+                    span.input-group-btn
+                        button.btn.btn-default#byCityButton(type='button')
+                            span.glyphicon.glyphicon-search
+                br
+                ul.nav.nav-pills.nav-stacked
+                    li#byMyLocation
+                        a Find Restaurants near my position
+                    li#getPumps
+                        a Show petrol stations along the way
+                    li#pos
+                        a Where am I?
+                    li.nav-divider
+                    li#natureNear
+                        a Show nature near chosen position (aditive)
+                    li#rest
+                        a Show restaurant bunch (aditive)
+                    li.nav-divider
+                    li#clear
+                        a Clear map
+                    li
+                        a(href='') Restart
+                br
+            .col-sm-9
+                #map
+                h4 Debug:
+                form(role='form')
+                    .form-group
+                        textarea#results.form-control(rows='3', required='', placeholder="Debug results will show here")
+                br
+      script.
+
+          var initializeMap = function () {
+              var map = L.map('map', {center: [48.693020, 19.68], zoom: 8});
+              L.tileLayer('https://api.tiles.mapbox.com/v4/{id}/{z}/{x}/{y}.png?access_token={accessToken}', {
+                  attribution: 'Map data &copy; <a href="http://openstreetmap.org">OpenStreetMap</a> contributors, <a href="http://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="http://mapbox.com">Mapbox</a>',
+                  maxZoom: 18,
+                  id: 'mapbox.streets',
+                  accessToken: 'pk.eyJ1IjoicGFja2llIiwiYSI6ImNqOGlqYjlzeTE0Y3ozMm8za3l6ZGNiMTAifQ.oxHGmWK3vs7y-FhMGCGCrQ'
+              }).addTo(map);
+
+              return map;
+          }
+
+          //global variables
+          var map;
+          var markersLayer = new L.LayerGroup();
+          var clickLayer = new L.LayerGroup();
+
+          var checkedFilters = ['empty'];
+          var destinationPoint = null;
+
+          //display options
+
+
+          var meMarkerIcon = L.AwesomeMarkers.icon({
+              icon: 'glyphicon glyphicon-user',
+              markerColor: 'black'
+          });
+
+          var clickMarkerIcon = L.AwesomeMarkers.icon({
+              icon: 'glyphicon glyphicon-circle-arrow-down',
+              markerColor: 'darkblue'
+          });
+
+          var cityMarkerIcon = L.AwesomeMarkers.icon({
+              icon: 'glyphicon glyphicon-home',
+              markerColor: 'darkblue'
+          });
+
+
+          //pump marker
+
+          var pumpMarkerIcon = L.AwesomeMarkers.icon({
+              icon: 'glyphicon glyphicon-tint',
+              markerColor: 'white',
+              iconColor:"black"
+          });
+
+          //restaurant marker icons
+
+          var restaurantMarkerIconLightGreen = L.AwesomeMarkers.icon({
+              icon: 'glyphicon glyphicon-cutlery',
+              markerColor: 'lightgreen'
+          });
+          var restaurantMarkerIconGreen = L.AwesomeMarkers.icon({
+              icon: 'glyphicon glyphicon-cutlery',
+              markerColor: 'green'
+          });
+
+          var restaurantMarkerIconDarkGreen = L.AwesomeMarkers.icon({
+              icon: 'glyphicon glyphicon-cutlery',
+              markerColor: 'darkgreen'
+          });
+
+
+          var restaurantMarkerIconGray = L.AwesomeMarkers.icon({
+              icon: 'glyphicon glyphicon-cutlery',
+              markerColor: 'gray'
+          });
+
+          var restaurantMarkerIconBeige = L.AwesomeMarkers.icon({
+              icon: 'glyphicon glyphicon-cutlery',
+              markerColor: 'beige'
+          });
+
+          var restaurantMarkerIconOrange = L.AwesomeMarkers.icon({
+              icon: 'glyphicon glyphicon-cutlery',
+              markerColor: 'orange'
+          });
+
+          var restaurantMarkerIconLightRed = L.AwesomeMarkers.icon({
+              icon: 'glyphicon glyphicon-cutlery',
+              markerColor: 'lightred'
+          });
+
+          var restaurantMarkerIconRed = L.AwesomeMarkers.icon({
+              icon: 'glyphicon glyphicon-cutlery',
+              markerColor: 'red'
+          });
+
+          var restaurantMarkerIconDarkRed = L.AwesomeMarkers.icon({
+              icon: 'glyphicon glyphicon-cutlery',
+              markerColor: 'darkred'
+          });
+
+
+          var changeRestaurantMarkerIcon = function (feature) {
+              var dis = feature.properties.distance;
+              if (dis <= 1000) {return restaurantMarkerIconGreen;}
+              else if (dis <= 3000) {return restaurantMarkerIconDarkGreen}
+              else if (dis <= 5000) {return restaurantMarkerIconOrange}
+              else if (dis <= 10000) {return restaurantMarkerIconRed}
+              else if (dis <= 15000) {return restaurantMarkerIconDarkRed}
+              else if (dis <= 20000) {return restaurantMarkerIconGray}
+              else {return restaurantMarkerIconGray;};
+          }
+
+
+          //restaurant marker style
+          var geojsonMarkerOptions = {
+              radius: 8,
+              fillColor: "#ff7800",
+              color: "#000",
+              weight: 1,
+              opacity: 1,
+              fillOpacity: 0.8
+          };
+
+          var changeStyle = function (feature) {
+             var dis = feature.properties.distance;
+              if(dis <= 1000) {return {fillColor: "green"}}
+              else if(dis <= 3000){ return {fillColor: "lime"}}
+              else if(dis <= 5000){ return {fillColor: "yellow"}}
+              else if(dis <= 10000){ return {fillColor: "orange"}}
+              else if(dis <= 15000){ return {fillColor: "red"}}
+              else if(dis <= 25000){ return {fillColor: "purple"}}
+              else { return {fillColor: "black"}};
+          }
+
+
+
+
+          //update map
+          //clear map;
+          var clearMap = function(){
+              console.log("Clearing map.");
+              markersLayer.clearLayers();
+          }
+
+          var addToMap = function (markers) {
+              console.log("Adding to map.");
+              markersLayer.addLayer(markers);
+          }
+
+          var updateMap = function (markers) {
+              console.log("Updating map.");
+              clearMap();
+              addToMap(markers);
+              console.log("Map updated.");
+          }
+
+          var updateClickOnMap = function (clickMarker) {
+              console.log("Changing click marker on map.");
+              clickLayer.clearLayers();
+              clickLayer.addLayer(clickMarker);
+          }
+
+          var clearClickOnMap = function () {
+              console.log("Clearing click on map.");
+              clickLayer.clearLayers();
+              $('#byPointInput').val('');
+          }
+
+          //helper function
+
+          var parsePoint = function (value){
+              var coord = value.split(',');
+              var lat = coord[1];
+              var lng = coord[0];
+              return {lat:lat, long: lng};
+          }
+
+          //other functions working with html elements
+          $(document).ready(function () {
+              console.log("document loaded");
+              map = initializeMap();
+              markersLayer.addTo(map);
+              clickLayer.addTo(map);
+
+              getMapClickPosition();
+              setFilters();
+              clear();
+              getPumps();
+              getNatureByPoint();
+              getRestaurantsByPoint();
+              getRestaurantsByCity();
+              getRestaurantsByCurrentPosition();
+              getCurrentPosition();
+              getAllRestaurants();
+          });
+
+          var clear = function () {
+              $('li#clear').click(function () {
+                  clearMap();
+                  clearClickOnMap();
+                  destinationPoint = null;
+              })
+          }
+
+          var getMapClickPosition = function(){
+              map.on('click',
+                  function (e) {
+                      var coord = e.latlng.toString().split(',');
+                      var lat = coord[0].split('(')[1];
+                      var long = coord[1].split(')')[0];
+                      console.log("Map click latitude: " + lat + " and longitude:" + long);
+                      $('#byPointInput').val([long,lat]);
+                      destinationPoint = { lat: lat, long: long};
+                      var clickMarker = L.marker(e.latlng,{icon: clickMarkerIcon})
+                          .bindPopup("<b>Chosen position</b>");
+                      updateClickOnMap(clickMarker);
+                  });
+          }
+
+
+          var getRestaurantsByCity = function () {
+              $('#byCityButton').click(function () {
+                  setFilters();
+                  var value = $('#byCityInput').val();
+                  console.log("city input value:" + value);
+                  if (!value) {
+                      alert("Enter city name.");
+                      return;
+                  }
+                  var params = {
+                      city: value,
+                      nature: checkedFilters
+                  }
+                  $.get('/map/getRestaurantsByCity', params, function (data) {
+                      console.log("response received:" + JSON.stringify(data));
+                      $('textarea#results.form-control').val(JSON.stringify(data));
+                      if (!data) {
+                          $('#byCityInput').val("Not found");
+                          return;
+                      }
+                      //handle restaurants
+                      var markers = L.geoJSON(data.restaurants, {
+                          onEachFeature: function (feature, layer) {
+                              layer.bindPopup("<b>" + feature.properties.name + "</b>");
+                          },
+                          pointToLayer: function (feature, latlng) {
+                              return L.marker(latlng, {icon:changeRestaurantMarkerIcon(feature)});
+                          }
+                      });
+                      clearClickOnMap();
+                      updateMap(markers);
+                      //handle city
+                      var geoFeature = data.city.features[0]; //expecting only 1 in array
+                      destinationPoint = {lat: geoFeature.geometry.coordinates[1],
+                                          long: geoFeature.geometry.coordinates[0]};
+                      $('#byCityInput').val(geoFeature.properties.name);
+                      var layer = L.geoJSON(geoFeature, {
+                          pointToLayer: function (feature, latlng) {
+                              return L.marker(latlng,{icon: cityMarkerIcon}).setZIndexOffset(1000);
+                          }
+                      })
+                          .bindPopup("<b>" + geoFeature.properties.name + "</b>")
+                      addToMap(layer);
+                      // map.panTo([50,50],{animation:true});
+                      map.flyTo([geoFeature.geometry.coordinates[1], geoFeature.geometry.coordinates[0]], 13);
+                  });
+              })
+          }
+
+
+          var getRestaurantsByPoint = function () {
+              $('#byPointButton').click(function () {
+                  clearMap();
+                  setFilters();
+                  var value = $('#byPointInput').val();
+                  console.log("point input value:" + value);
+                  if(!value) {
+                      alert("Click on the map to choose a position");
+                      return;
+                  }
+                  var point = parsePoint(value);
+                  //var point = {lat: 48.152799, long: 17.116507};
+                  var params = {
+                      point:point,
+                      nature: checkedFilters
+                  }
+                  $.get('/map/getRestaurantsByPoint', params, function (data) {
+                      console.log("response received:" + JSON.stringify(data));
+                      $('textarea#results.form-control').val(JSON.stringify(data));
+                      if (!data) {
+                          return;
+                      }
+                      //handle restaurants
+
+                      var markers = L.geoJSON(data.restaurants, {
+                          onEachFeature: function (feature, layer) {
+                              layer.bindPopup("<b>" + feature.properties.name + "</b>");
+                          },
+                          pointToLayer: function (feature, latlng) {
+                              return L.marker(latlng, {icon: changeRestaurantMarkerIcon(feature)});
+                          }
+                      });
+                      updateMap(markers);
+                      //handle city
+                      /*
+                      var geoFeature = data.city.features[0]; //expecting only 1 in array
+                      $('#byCityInput').val(geoFeature.properties.name);
+                      var layer = L.geoJSON(geoFeature, {
+                          pointToLayer: function (feature, latlng) {
+                              return L.marker(latlng, {icon: cityMarkerIcon}).setZIndexOffset(1000);
+                          }
+                      })
+                          .bindPopup("<b>" + geoFeature.properties.name + "</b>")
+                      addToMap(layer);
+                      // map.panTo([50,50],{animation:true});
+                      map.flyTo([geoFeature.geometry.coordinates[1], geoFeature.geometry.coordinates[0]], 13);
+                      */
+                  });
+              })
+          }
+
+          var getAllRestaurants = function () {
+              $('li#rest').click(function () {
+                  console.log("get all resttaurants clicked");
+                  $.get('/map/getAllRestaurants', function (data) {
+                      $('textarea#results.form-control').val(JSON.stringify(data));
+                      console.log("received all restaurants");
+                      console.log("showing on map");
+
+                      var markers = L.geoJSON(data,{
+                          onEachFeature: function (feature, layer) {
+                              layer.bindPopup(feature.properties.name);
+                          },
+                          pointToLayer: function (feature, latlng) {
+                              return L.circleMarker(latlng, geojsonMarkerOptions);
+                          }
+                      });
+                      addToMap(markers);
+                  });
+              })
+          }
+
+          var getNatureByPoint = function () {
+              $('li#natureNear').click(function () {
+                  var value = $('#byPointInput').val();
+                  console.log("point input value:" + value);
+                  if (!value) {
+                      alert("Click on the map to choose a position");
+                      return;
+                  }
+                  var point = parsePoint(value);
+                  //var point = {lat: 48.152799, long: 17.116507};
+                  var params = {
+                      point: point
+                  }
+                  $.get('/map/getNatureByPoint',params, function (data) {
+                      console.log("response received:" + JSON.stringify(data));
+                      $('textarea#results.form-control').val(JSON.stringify(data));
+                      if (!data) {
+                          return;
+                      }
+                      console.log("showing on map");
+                      var greenStyle = {
+                          "color": "lime",
+                          "weight": 1,
+                          "opacity": 0.5
+                      };
+                      var waterStyle = {
+                          "color": "blue",
+                          "weight": 1,
+                          "opacity": 0.5
+                      };
+
+                      var markers = L.geoJSON(data.nature, {
+                          style: function (feature) {
+                              switch (feature.properties.typ) {
+                                  case 'green':
+                                      return greenStyle;
+                                  case 'water':
+                                      return waterStyle;
+                              }
+                          }
+                      });
+                      addToMap(markers);
+                  });
+              })
+          }
+
+          var setFilters = function () {
+              checkedFilters =['empty'];
+              if ($('input#water').prop('checked')) {
+                  checkedFilters.push("water");
+              }
+              if ($('input#green').prop('checked')) {
+                  checkedFilters.push("green");
+              }
+              console.log("filter set:"  + checkedFilters);
+              $('textarea#results.form-control').val(JSON.stringify(checkedFilters));
+          }
+
+          var getCurrentPosition = function(){
+              $("li#pos").click( function () {
+                  // Try HTML5 geolocation.
+                  console.log("Called getCurrentPosition");
+                  if (navigator.geolocation) {
+                      navigator.geolocation.getCurrentPosition(function (position) {
+                          var pos = {
+                              lat: position.coords.latitude,
+                              lng: position.coords.longitude
+                          };
+                          $('textarea#results.form-control').val(JSON.stringify(pos));
+
+
+                          var meMarker = L.marker([pos.lat, pos.lng], {icon: meMarkerIcon} )
+                              .bindPopup("<b>I am here</b>")
+
+                          //map.fitBounds(L.latLngBounds([meMarker.getLatLng()]));
+                          //map.fitBounds([meMarker.getLatLng()]);
+                          updateMap(meMarker);
+                          console.log("My position:" + JSON.stringify(meMarker.toGeoJSON()));
+                          map.flyTo(meMarker.getLatLng(),15);
+
+                      }, function () {
+                          alert("Failed getting position");
+                      });
+                  } else {
+                      // Browser doesn't support Geolocation
+                      alert("no support for geolocation");
+                  }
+              });
+          }
+
+          var getRestaurantsByCurrentPosition = function () {
+              $("li#byMyLocation").click(function () {
+                  // Try HTML5 geolocation.
+                  console.log("Called getRestaurantsByCurrentPosition");
+                  if (navigator.geolocation) {
+                      navigator.geolocation.getCurrentPosition(function (position) {
+                          var pos = {
+                              lat: position.coords.latitude,
+                              long: position.coords.longitude
+                          };
+                          $('textarea#results.form-control').val(JSON.stringify(pos));
+
+
+                          var meMarker = L.marker([pos.lat, pos.long], {icon: meMarkerIcon})
+                              .bindPopup("<b>I am here</b>")
+
+
+                          updateMap(meMarker);
+                          console.log("My position:" + JSON.stringify(meMarker.toGeoJSON()));
+                         // map.flyTo(meMarker.getLatLng(), 12);
+
+                          setFilters();
+
+                          clearClickOnMap();
+                          destinationPoint = pos;
+
+                          var params = {
+                              point: pos,
+                              nature: checkedFilters
+                          }
+                          $.get('/map/getRestaurantsByPoint', params, function (data) {
+                              console.log("response received:" + JSON.stringify(data));
+                              $('textarea#results.form-control').val(JSON.stringify(data));
+                              if (!data) {
+                                  return;
+                              }
+                              var markers = L.geoJSON(data.restaurants, {
+                                  onEachFeature: function (feature, layer) {
+                                      layer.bindPopup("<b>" + feature.properties.name + "</b>");
+                                  },
+                                  pointToLayer: function (feature, latlng) {
+                                      return L.marker(latlng, {icon: changeRestaurantMarkerIcon(feature)});
+                                  }
+                              });
+                              addToMap(markers);
+
+                              map.flyToBounds(markers.getBounds(),{maxZoom:15});
+                          });
+                      }, function () {
+                          alert("Failed getting position");
+                      });
+                  } else {
+                      // Browser doesn't support Geolocation
+                      alert("no support for geolocation");
+                  }
+              });
+          }
+
+          var getPumps = function () {
+              $("li#getPumps").click(function () {
+                  // Try HTML5 geolocation.
+                  console.log("Called gePumps");
+                  if (!destinationPoint) {
+                      alert("No destination.");
+                      return;
+                  }
+                  if (navigator.geolocation) {
+                      navigator.geolocation.getCurrentPosition(function (position) {
+                          var pos = {
+                              lat: position.coords.latitude,
+                              long: position.coords.longitude
+                          };
+                          $('textarea#results.form-control').val(JSON.stringify(pos));
+
+
+                          var meMarker = L.marker([pos.lat, pos.long], {icon: meMarkerIcon})
+                              .bindPopup("<b>I am here</b>")
+
+
+                          addToMap(meMarker);
+                          console.log("My position:" + JSON.stringify(meMarker.toGeoJSON()));
+                          // map.flyTo(meMarker.getLatLng(), 12);
+
+                          var params = {
+                              start: pos,
+                              end: destinationPoint,
+                          }
+                          $.get('/map/getPumps', params, function (data) {
+                              console.log("response received:" + JSON.stringify(data));
+                              $('textarea#results.form-control').val(JSON.stringify(data));
+                              if (!data) {
+                                  return;
+                              }
+                              var markers = L.geoJSON(data.pumps, {
+                                  onEachFeature: function (feature, layer) {
+                                      layer.bindPopup("<b>" + feature.properties.name + "</b><br/>"
+                                      + "Distance: " + feature.properties.dist/1000 + " km" );
+                                  },
+                                  pointToLayer: function (feature, latlng) {
+                                      return L.marker(latlng, {icon: pumpMarkerIcon});
+                                  }
+                              });
+                              addToMap(markers);
+                          });
+                      }, function () {
+                          alert("Failed getting position");
+                      });
+                  } else {
+                      // Browser doesn't support Geolocation
+                      alert("no support for geolocation");
+                  }
+              });
+          }
+
+
+
+
+
+
+
