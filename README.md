@@ -20,7 +20,7 @@ Build a map-based application, which lets the user see geo-based data on a map a
 
 Fill in (either in English, or in Slovak):
 
-**Application description**: `<fill in>`
+**Application description**: `<fill in> this is my bullshit`
 
 **Data source**: `<fill in>`
 
