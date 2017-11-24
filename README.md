@@ -117,9 +117,9 @@ The imported geo data is in `SRS:4326 (WGS84)` projection.
 
 Queries using filters(Water,Green) are created dynamically within the code by joining query parts together.
 
-Here are some examples queries (corresponds to the above application usage examples):
+Here are some examples queries (correspond to the above application usage examples):
 
-- Searching restaurants around city `Liptovsky Mikulas` (does not have to be entered exactly). We are displaying only those near `Water` and `Green`. The proper name for a city is also returned into the input field.
+- Searching restaurants around city `Liptovsky Mikulas` (does not have to be entered exactly). We are displaying only those near `Water` and `Green`. The proper name for the searched city is also returned into the input field.
 
 ```sql
 SELECT name,ST_AsGeoJSON(way)as geojson
@@ -152,4 +152,47 @@ WITH myPoint AS(
  	) SELECT DISTINCT ON (res.way) res.way, res.name, ST_AsGeoJSON(res.way) as geojson, res.distance
     FROM restaurantNearPoint res, natureNearPoint nat
     WHERE ST_DWithin(res.way, nat.way, 100, true);
+```
+
+- Searching for restaurants at user's actual position.
+
+```sql
+ WITH myPoint AS(
+    	SELECT ST_Point(17.064314000000003, 48.159024099999996) as way
+    ), natureNearPoint AS(
+ 	SELECT poly.*
+    FROM planet_osm_polygon poly, myPoint
+    WHERE ST_DWithin(myPoint.way, poly.way,20000,true)
+         AND (
+                 (false)
+                  OR
+                 (poly.natural='water'
+        AND poly.water  NOT IN ('canal','wastewater'))
+              )
+ 	), restaurantNearPoint AS(
+     SELECT  DISTINCT ON (point_A.way) point_A.way,
+     			point_A.name, ST_DistanceSphere(point_A.way,myPoint.way) as distance
+      FROM planet_osm_point point_A, myPoint
+      WHERE point_A.amenity = 'restaurant' AND point_A.name IS NOT NULL
+      AND ST_DistanceSphere(point_A.way,myPoint.way) < 20000
+ 	) SELECT DISTINCT ON (res.way) res.way, res.name, ST_AsGeoJSON(res.way) as geojson, res.distance
+    FROM restaurantNearPoint res, natureNearPoint nat
+    WHERE ST_DWithin(res.way, nat.way, 100, true);
+```
+
+- Show petrol stations along the way for a chosen position on map.
+
+```sql
+WITH line AS (
+             SELECT ST_MakeLine( ST_Point(17.0643115, 48.1590277),
+                                ST_Point(16.90878, 48.36948))::geography as way
+         ), pumps AS(
+             SELECT  planet_osm_point.name,  planet_osm_point.way,
+             round(ST_DistanceSphere(ST_Point(17.0643115, 48.1590277),planet_osm_point.way)) as dist
+             FROM planet_osm_point,line
+             WHERE  amenity= 'fuel'
+             AND name IS NOT NULL
+             AND ST_Contains((ST_Buffer(line.way, 5000))::geometry, planet_osm_point.way)
+         )SELECT  pumps.name, pumps.dist, ST_AsGeoJson(pumps.way) AS geojson
+         FROM line, pumps;
 ```
