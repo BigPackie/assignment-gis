@@ -235,6 +235,16 @@ var QueryBuilder = function (pointDistance, natureDistance,pumpDistance) {
         return completeQuery;
     }
 
+    this.buildQuery_getAllRestaurantsBunch = function() {
+        var completeQuery = "";
+
+        completeQuery = "SELECT point.name,ST_AsGeoJSON(point.way) AS geojson \n" +
+            "FROM public.planet_osm_point point\n" +
+            "WHERE point.amenity = 'restaurant' AND point.name IS NOT NULL LIMIT 300;";
+
+        return completeQuery;
+    }
+
 }
 
 const queryBuilder = new QueryBuilder(20000,100,5000);
