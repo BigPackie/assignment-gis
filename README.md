@@ -23,9 +23,28 @@ Fill in (either in English, or in Slovak):
 **Application description**: This web application allows users to see location of restaurants on  the map of Slovakia.  Popup of any restaurant marker shows its name, the color of the marker depends on the distance of the restaurant from a chosen position.  It can also display the name and distance of petrol stations along the bee-line (straight line between two places) of users position and a chosen destination.
 
 There are 3  methods for searching restaurants:
--Based on user?s current position
--Based on a chosen point
--Based on city/town name
+- Based on user's current position
+- Based on a chosen point
+- Based on city/town name
+
+There is also a possibility to filter restaurants located near natural environments:
+- Water \? restaurants in  close proximity of lakes, rivers, etc.
+- Green \? restaurants in close proximity of parks, forests, trees, gardens, etc.
+
+There is some additional functionality for fun:
+- Randomly showing restaurant (orange dots) on the map. It's an additive function, which mean repeatedly executing it shows more and more restaurants
+- Showing natural environments near a position \? displays category 'Green' with green color and 'Water' with blue color, also additive function
+- Getting user's location
+
+**Application usage examples**:
+
+Searching restaurants around city Liptovsk? Mikul?? (does not have to be entered exactly). We are displaying only does near Water and Green.
+
+![Screenshot](pic1.jpg)
+
+Searching for restaurants at user?s actual position.
+
+![Screenshot](pic2.png)
 
 **Data source**: `<fill in>`
 
