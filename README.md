@@ -28,24 +28,42 @@ There are 3  methods for searching restaurants:
 - Based on city/town name
 
 There is also a possibility to filter restaurants located near natural environments:
-- Water \? restaurants in  close proximity of lakes, rivers, etc.
-- Green \? restaurants in close proximity of parks, forests, trees, gardens, etc.
+- Water \- restaurants in  close proximity of lakes, rivers, etc.
+- Green \- restaurants in close proximity of parks, forests, trees, gardens, etc.
 
 There is some additional functionality for fun:
 - Randomly showing restaurant (orange dots) on the map. It's an additive function, which mean repeatedly executing it shows more and more restaurants
-- Showing natural environments near a position \? displays category 'Green' with green color and 'Water' with blue color, also additive function
+- Showing natural environments near a position \- displays category 'Green' with green color and 'Water' with blue color, also additive function
 - Getting user's location
 
 **Application usage examples**:
 
-Searching restaurants around city Liptovsk? Mikul?? (does not have to be entered exactly). We are displaying only does near Water and Green.
+Searching restaurants around city Liptovsky Mikulas (does not have to be entered exactly). We are displaying only does near Water and Green.
 
 ![Screenshot](pic1.jpg)
 
-Searching for restaurants at user?s actual position.
+Searching for restaurants at user's actual position.
 
 ![Screenshot](pic2.png)
 
-**Data source**: `<fill in>`
+Playing around with additional functions for fun.
 
-**Technologies used**: `<fill in>`
+![Screenshot](pic3.png)
+
+Show petrol stations along the way for a chosen position on map.
+
+![Screenshot](pic4.png)
+
+Searching  all restaurants in Nitra  and showing petrol stations along the way to Nitra.
+
+![Screenshot](pic5.png)
+
+**Data source**: *Open Street Maps*, area of Slovakia, *Mapbox* for map tiles
+
+**Technologies used**: NodeJS, Express, Postgis(Postgres), bootstrap,  Jade, Leaflet, Javascript(Ajax, jQuery), REST Api
+
+**Application architecture**:
+It is a 3-layered web application:
+- Frontend \- map.jade
+- Backend \- map.js, db.js, queryBuilder.js
+- Database \- Postgres
