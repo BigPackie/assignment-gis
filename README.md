@@ -98,10 +98,14 @@ I am using `PostgreSQL` with `postgis`  and `unaccent` extensions.
 
 Both geometry and geography indices are created to improve query speed.
 
-``CREATE INDEX polygon_gix ON planet_osm_polygon USING GIST (way);
-  CREATE INDEX polygon_gix_geog ON planet_osm_polygon USING GIST (way:geography);
-  CREATE INDEX point_gix ON planet_osm_ point USING GIST (way);
-  CREATE INDEX point_gix_geog ON planet_osm_ point USING GIST (way:geography);
+``
+CREATE INDEX polygon_gix ON planet_osm_polygon USING GIST (way);
+
+CREATE INDEX polygon_gix_geog ON planet_osm_polygon USING GIST (way:geography);
+
+CREATE INDEX point_gix ON planet_osm_ point USING GIST (way);
+
+CREATE INDEX point_gix_geog ON planet_osm_ point USING GIST (way:geography);
 ``
 
 **Importing data**:
