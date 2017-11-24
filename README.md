@@ -113,3 +113,43 @@ CREATE INDEX point_gix_geog ON planet_osm_ point USING GIST (way:geography);
 
 The imported geo data is in `SRS:4326 (WGS84)` projection.
 
+**Queries**:
+
+Queries using filters(Water,Green) are created dynamically within the code by joining query parts together.
+
+Here are some examples queries (corresponds to the above application usage examples):
+
+- Searching restaurants around city `Liptovsky Mikulas` (does not have to be entered exactly). We are displaying only those near `Water` and `Green`. The proper name for a city is also returned into the input field.
+
+```sql
+```
+SELECT name,ST_AsGeoJSON(way)as geojson
+FROM planet_osm_point point
+WHERE LOWER(unaccent(point.name)) LIKE LOWER(unaccent('%liptovsky mikulas%'))
+    AND point.place IN ('city','town') LIMIT 1;
+```sql
+WITH myPoint AS(
+    	SELECT ST_Point(19.6164972, 49.0832482) as way
+    ), natureNearPoint AS(
+ 	SELECT poly.*
+    FROM planet_osm_polygon poly, myPoint
+    WHERE ST_DWithin(myPoint.way, poly.way,20000,true)
+         AND (
+                 (poly.leisure IN ('park','nature_reserve','garden')
+                  OR poly.boundary = 'national_park'
+                  OR poly.natural = 'wood'
+                  OR poly.landuse IN ('forest','recreation_ground'))
+                  OR
+                 (poly.natural='water'
+        AND poly.water  NOT IN ('canal','wastewater'))
+              )
+ 	), restaurantNearPoint AS(
+     SELECT  DISTINCT ON (point_A.way) point_A.way,
+     			point_A.name, ST_DistanceSphere(point_A.way,myPoint.way) as distance
+      FROM planet_osm_point point_A, myPoint
+      WHERE point_A.amenity = 'restaurant' AND point_A.name IS NOT NULL
+      AND ST_DistanceSphere(point_A.way,myPoint.way) < 20000
+ 	) SELECT DISTINCT ON (res.way) res.way, res.name, ST_AsGeoJSON(res.way) as geojson, res.distance
+    FROM restaurantNearPoint res, natureNearPoint nat
+    WHERE ST_DWithin(res.way, nat.way, 100, true);
+```
