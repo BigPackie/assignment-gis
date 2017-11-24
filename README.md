@@ -96,9 +96,9 @@ I am using `PostgreSQL` with `postgis`  and `unaccent` extensions.
 
 *ST_AsGeoJSON()* function is used for returning geospatial data in geoJSON format.
 
-Both geometry and geography indices are created to improve query speed.
+Both geometry and geography indices are created to improve query speed:
 
-```
+```sql
 CREATE INDEX polygon_gix ON planet_osm_polygon USING GIST (way);
 
 CREATE INDEX polygon_gix_geog ON planet_osm_polygon USING GIST (way:geography);
