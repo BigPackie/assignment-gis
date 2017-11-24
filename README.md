@@ -77,8 +77,23 @@ When user clicks on a button, *jQuery* catches this action and we handle it by p
 ## Backend
 
 Within *map.js* is all the logic for handling requests from clients. The REST api is using *express framework's router* module. There is a *db.js* file for creating the connection to our database and  *queryBuilder.js* for creating all queries. Results from the database are parsed using *postgistogeojson.js*, that transforms them to a geoJSON  *featureCollection*  format.
+
 For getting user's position web browser's *geolocation API* is used. For it to work, user must **enable location** access.
+
+**REST services**:
+
+There are several REST services within map.js and their names are self-explanatory:
+- /getRestaurantsByCity
+- /getRestaurantsByPoint
+- /getPumps
+- /getNatureByPoint
+- /getAllRestaurants
 
 
 ## Database
 
+I am using `PostgreSQL` with `postgis`  and `unaccent` extensions. Geo data are from OpenStreetMaps. For importing I am using `osm2pgsql`.
+
+*ST_AsGeoJSON()* function is used for returning geospatial data in geoJSON format.
+
+**Import command**: ``osm2pgsql -l -G -U postgres -H localhost -d pdtdb map.osm``
