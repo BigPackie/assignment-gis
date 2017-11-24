@@ -38,7 +38,7 @@ There is some additional functionality for fun:
 
 **Application usage examples**:
 
-Searching restaurants around city `Liptovsky Mikulas` (does not have to be entered exactly). We are displaying only does near Water and Green.
+Searching restaurants around city `Liptovsky Mikulas` (does not have to be entered exactly). We are displaying only those near `Water` and `Green`. The proper name for a city is also returned into the input field.
 
 ![Screenshot](pic1.jpg)
 
@@ -67,3 +67,18 @@ It is a 3-layered web application:
 - Frontend \- map.jade
 - Backend \- map.js, db.js, queryBuilder.js
 - Database \- Postgres
+
+## Frontend
+
+All the relevant frontend code is located inside *map.jade*. Jade is a templating language, so it is must be compiled into HTML. This file also contains javascript code for managing leaflet plugin and requesting the backend.
+
+When user clicks on a button, *jQuery* catches this action and we handle it by preparing all needed parameters and sending  *HTTP GET* request via *Ajax* to the backend server. Upon receiving the response we just display it in the correct visual format using leaflet's api.
+
+## Backend
+
+Within *map.js* is all the logic for handling requests from clients. The REST api is using *express framework's router* module. There is a *db.js* file for creating the connection to our database and  *queryBuilder.js* for creating all queries. Results from the database are parsed using *postgistogeojson.js*, that transforms them to a geoJSON  *featureCollection*  format.
+For getting user's position web browser's *geolocation API* is used. For it to work, user must **enable location** access.
+
+
+## Database
+
