@@ -18,8 +18,6 @@ Build a map-based application, which lets the user see geo-based data on a map a
 
 ## My project
 
-Fill in (either in English, or in Slovak):
-
 **Application description**: This web application allows users to see location of restaurants on  the map of Slovakia.  Popup of any restaurant marker shows its name, the color of the marker depends on the distance of the restaurant from a chosen position.  It can also display the name and distance of petrol stations along the bee-line (straight line between two places) of users position and a chosen destination.
 
 There are 3  methods for searching restaurants:
