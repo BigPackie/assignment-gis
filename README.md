@@ -58,7 +58,7 @@ Searching  all restaurants in `Nitra`  and showing petrol stations along the way
 
 ![Screenshot](pic5.png)
 
-**Data source**: *Open Street Maps*, area of Slovakia, *Mapbox* for map tiles
+**Data source**: *OpenStreetMaps*, area of Slovakia, *Mapbox* for map tiles
 
 **Technologies used**: NodeJS, Express, Postgis(Postgres), bootstrap,  Jade, Leaflet, Javascript(Ajax, jQuery), REST Api
 
@@ -92,8 +92,20 @@ There are several REST services within map.js and their names are self-explanato
 
 ## Database
 
-I am using `PostgreSQL` with `postgis`  and `unaccent` extensions. Geo data are from OpenStreetMaps. For importing I am using `osm2pgsql`.
+I am using `PostgreSQL` with `postgis`  and `unaccent` extensions.
 
 *ST_AsGeoJSON()* function is used for returning geospatial data in geoJSON format.
 
-**Import command**: ``osm2pgsql -l -G -U postgres -H localhost -d pdtdb map.osm``
+Both geometry and geography indices are created to improve query speed.
+
+``CREATE INDEX polygon_gix ON planet_osm_polygon USING GIST (way);
+  CREATE INDEX polygon_gix_geog ON planet_osm_polygon USING GIST (way:geography);
+  CREATE INDEX point_gix ON planet_osm_ point USING GIST (way);
+  CREATE INDEX point_gix_geog ON planet_osm_ point USING GIST (way:geography);
+``
+
+**Importing data**:
+`osm2pgsql` tool's command ``osm2pgsql -l -G -U postgres -H localhost -d pdtdb map.osm`` is used to import geo data from `OpenStreetMaps`.
+
+The imported geo data is in `SRS:4326 (WGS84)` projection.
+
