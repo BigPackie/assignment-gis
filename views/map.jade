@@ -50,8 +50,8 @@ block content
                 br
             .col-sm-9
                 #map
-                h4 Debug:
-                form(role='form')
+                h4(hidden='true') Debug:
+                form(role='form' hidden='true')
                     .form-group
                         textarea#results.form-control(rows='3', required='', placeholder="Debug results will show here")
                 br
@@ -315,7 +315,7 @@ block content
                           .bindPopup("<b>" + geoFeature.properties.name + "</b>")
                       addToMap(layer);
                       // map.panTo([50,50],{animation:true});
-                      map.flyTo([geoFeature.geometry.coordinates[1], geoFeature.geometry.coordinates[0]], 13);
+                      map.flyToBounds(markers.getBounds(),{maxZoom:15});
                   });
               })
           }
@@ -354,20 +354,6 @@ block content
                           }
                       });
                       updateMap(markers);
-                      //handle city
-                      /*
-                      var geoFeature = data.city.features[0]; //expecting only 1 in array
-                      $('#byCityInput').val(geoFeature.properties.name);
-                      var layer = L.geoJSON(geoFeature, {
-                          pointToLayer: function (feature, latlng) {
-                              return L.marker(latlng, {icon: cityMarkerIcon}).setZIndexOffset(1000);
-                          }
-                      })
-                          .bindPopup("<b>" + geoFeature.properties.name + "</b>")
-                      addToMap(layer);
-                      // map.panTo([50,50],{animation:true});
-                      map.flyTo([geoFeature.geometry.coordinates[1], geoFeature.geometry.coordinates[0]], 13);
-                      */
                   });
               })
           }
