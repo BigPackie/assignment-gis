@@ -38,7 +38,7 @@ There is some additional functionality for fun:
 
 **Application usage examples**:
 
-Searching restaurants around city Liptovsky Mikulas (does not have to be entered exactly). We are displaying only does near Water and Green.
+Searching restaurants around city `Liptovsky Mikulas` (does not have to be entered exactly). We are displaying only does near Water and Green.
 
 ![Screenshot](pic1.jpg)
 
@@ -54,7 +54,7 @@ Show petrol stations along the way for a chosen position on map.
 
 ![Screenshot](pic4.png)
 
-Searching  all restaurants in Nitra  and showing petrol stations along the way to Nitra.
+Searching  all restaurants in `Nitra`  and showing petrol stations along the way to Nitra.
 
 ![Screenshot](pic5.png)
 
