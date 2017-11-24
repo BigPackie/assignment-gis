@@ -122,11 +122,11 @@ Here are some examples queries (corresponds to the above application usage examp
 - Searching restaurants around city `Liptovsky Mikulas` (does not have to be entered exactly). We are displaying only those near `Water` and `Green`. The proper name for a city is also returned into the input field.
 
 ```sql
-```
 SELECT name,ST_AsGeoJSON(way)as geojson
 FROM planet_osm_point point
 WHERE LOWER(unaccent(point.name)) LIKE LOWER(unaccent('%liptovsky mikulas%'))
     AND point.place IN ('city','town') LIMIT 1;
+```
 ```sql
 WITH myPoint AS(
     	SELECT ST_Point(19.6164972, 49.0832482) as way
